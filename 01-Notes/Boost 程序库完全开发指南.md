@@ -2254,8 +2254,7 @@ void case3()
 
 function类似一个容器，可以容纳任意有operator() 的类型(函数指针、函数对象、lambda表达式) ，它是运行时的，可以任意拷贝、赋值、存储其他可调用物。
 
-std::function与boost::function基本相同，它们只有少量
-的区别:
+std::function与boost::function基本相同，它们只有少量的区别:
 
 - 没有clear() 和empty() 成员函数。
 - 提供assign() 成员函数。
@@ -2264,6 +2263,29 @@ std::function与boost::function基本相同，它们只有少量
 所以，同shared_ptr一样，std::function在函数返回值或函数参数等语境里转型bool需要使用static_cast＜bool＞(f) 或() !!f的形式。
 
 ### 11.4 signals2
+
+signals2（衍生自Boost中另一个已被废弃的库signals）实现了线程安全的观察者模式。在signals2库中，观察者模式被称为信号/插槽（signals/slots）机制，它是一种函数回调机制，一个信号关联了多个插槽，当信号发出时，所有关联它的插槽都会被调用。
+许多成熟的软件系统都用到了这种信号/插槽机制（另一个常用的名称是事件处理机制：event/event handler），它可以很好地解耦一组互相协作的类，有的语言甚至直接内建了对它的支持，signals2以库的形式为C++增加了这个重要的功能。
+
+#### 1 类摘要
+
+signals2库的核心是是signal 类，相当于 C＃语言中的event+delegate，它的模板参数总共有7个，
+
+- `Signature`：信号的签名，以函数类型的形式指定。
+- `Combiner`：用于组合连接到信号的槽返回值的二元函数对象。
+- `Group`：可选参数，用于将相关信号分组。默认使用int来标记组号，也可以改为std：：string等类型，但通常没有必要。
+- `GroupCompare`：用于比较分组值的比较函数对象。默认是升序（std：：less＜Group＞），因此要求Gro
+  up必须定义operator＜。
+- `SlotFunction`：可以连接到信号的函数对象的类型。
+- `ExtendedSlotFunction`：可选参数，用于支持扩展的槽函数。
+- `Mutex`：用于保护信号和槽的互斥对象类型。
+
+signal继承自signal_base，而signal_base又继承自noncopyable（4.1节），因此 signal 是不可拷贝的。如果把 signal 作为自定义类的成员变量，那么自定义类也将是不可拷贝的，除非使用shared_ptr/ref来间接持有它。
+
+#### 2 操作函数
+
+signal最重要的操作函数是插槽管理函数connect（），它把插槽连接到信号上，相当于为信号（事件）增加了一个处理的handler。
+插槽可以是任意的可调用对象，包括函数指针、函数对象，以及它们的bind/lambda表达式和function对象，signal内部使用function作为容器来保存这些可调用对象。
 
 ### 11.5 总结
 
